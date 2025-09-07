@@ -1,19 +1,13 @@
 ﻿using System.Text;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
+using Physics_Baseball_Game.Models;
+using Physics_Baseball_Game.ViewModels;
+using Physics_Baseball_Game.Views;
 
 namespace Physics_Baseball_Game
 {
-    /// <summary>
-    /// Interaction logic for MainWindow.xaml
-    /// </summary>
     public partial class MainWindow : Window
     {
         public MainWindow()
@@ -23,13 +17,53 @@ namespace Physics_Baseball_Game
 
         private void StartGame_Click(object sender, RoutedEventArgs e)
         {
-            // TODO: Navigate to gameplay screen once implemented
-            MessageBox.Show("Start Game clicked (placeholder)");
+            // Temporary: create a sample player. Replace with repository lookup later.
+            var player = new BasicPlayer(
+                firstName: "Alex",
+                lastName: "Carter",
+                age: 24,
+                position: PlayerPosition.CenterField,
+                role: PlayerRole.Batter,
+                batHand: BatHand.Right,
+                throwHand: ThrowHand.Right,
+                attributes: new PhysicalAttributes(
+                    HeightInInches: 74,
+                    WeightInPounds: 205,
+                    SprintSpeed: 28.4,
+                    Acceleration: 7.2,
+                    BatSpeed: 72.5,
+                    ArmStrength: 88.1,
+                    ReactionTime: 0.18));
+
+            var vm = new PlayerProfileViewModel(player);
+            var view = new PlayerProfileView { DataContext = vm };
+
+            vm.CloseRequested += () => ShowStartMenu();
+            vm.Saved += _ =>
+            {
+                // Persist later (repository call)
+                ShowStartMenu();
+            };
+
+            ShowView(view);
+        }
+
+        private void ShowView(UserControl view)
+        {
+            StartScreenRoot.Visibility = Visibility.Collapsed;
+            PageHost.Content = view;
+            PageHost.Visibility = Visibility.Visible;
+        }
+
+        private void ShowStartMenu()
+        {
+            PageHost.Visibility = Visibility.Collapsed;
+            PageHost.Content = null;
+            StartScreenRoot.Visibility = Visibility.Visible;
         }
 
         private void Options_Click(object sender, RoutedEventArgs e)
         {
-            // TODO: Show options dialog
             MessageBox.Show("Options clicked (placeholder)");
         }
 
@@ -42,7 +76,15 @@ namespace Physics_Baseball_Game
         {
             if (e.Key == Key.Escape)
             {
-                Close();
+                if (PageHost.Visibility == Visibility.Visible)
+                {
+                    // Treat Esc as cancel/back when in a page
+                    ShowStartMenu();
+                }
+                else
+                {
+                    Close();
+                }
             }
         }
     }
