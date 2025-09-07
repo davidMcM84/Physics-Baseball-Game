@@ -3,10 +3,36 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:Physics_Baseball_Game"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="Physics Baseball Game"
+        WindowStyle="None"
+        ResizeMode="NoResize"
+        WindowState="Maximized"
+        Background="Black"
+        KeyDown="Window_KeyDown">
     <Grid>
+        <Grid.Background>
+            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                <GradientStop Color="#0d1b2a" Offset="0" />
+                <GradientStop Color="#1b263b" Offset="0.5" />
+                <GradientStop Color="#415a77" Offset="1" />
+            </LinearGradientBrush>
+        </Grid.Background>
 
+        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Width="420">
+            <Border Background="#66000000" CornerRadius="16" Padding="40" >
+                <StackPanel>
+                    <TextBlock Text="Physics Baseball" FontSize="56" FontWeight="Bold" Foreground="White" TextAlignment="Center" />
+                    <TextBlock Text="A Physics-Based Batting Challenge" FontSize="18" Foreground="#CCFFFFFF" TextAlignment="Center" Margin="0,12,0,4" />
+                    <StackPanel Margin="0,16,0,0">
+                        <Button x:Name="StartButton" Content="Start Game" Height="54" FontSize="20" Click="StartGame_Click" IsDefault="True" Margin="0,0,0,12" />
+                        <Button Content="Options" Height="48" FontSize="18" Click="Options_Click" Margin="0,0,0,12" />
+                        <Button Content="Exit" Height="48" FontSize="18" Click="Exit_Click" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+
+        <TextBlock Text="Press Esc to Exit" Foreground="#AAFFFFFF" FontSize="14" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0 0 20 12" />
     </Grid>
 </Window>

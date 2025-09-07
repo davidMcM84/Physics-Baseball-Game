@@ -20,5 +20,30 @@ namespace Physics_Baseball_Game
         {
             InitializeComponent();
         }
+
+        private void StartGame_Click(object sender, RoutedEventArgs e)
+        {
+            // TODO: Navigate to gameplay screen once implemented
+            MessageBox.Show("Start Game clicked (placeholder)");
+        }
+
+        private void Options_Click(object sender, RoutedEventArgs e)
+        {
+            // TODO: Show options dialog
+            MessageBox.Show("Options clicked (placeholder)");
+        }
+
+        private void Exit_Click(object sender, RoutedEventArgs e)
+        {
+            Close();
+        }
+
+        private void Window_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Escape)
+            {
+                Close();
+            }
+        }
     }
 }
