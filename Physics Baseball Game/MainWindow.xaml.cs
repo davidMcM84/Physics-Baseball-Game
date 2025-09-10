@@ -33,7 +33,31 @@ namespace Physics_Baseball_Game
                     Acceleration: 7.2,
                     BatSpeed: 72.5,
                     ArmStrength: 88.1,
-                    ReactionTime: 0.18));
+                    ReactionTime: 0.18),
+                pitches: new List<Pitch>());
+
+            var pitcher = new BasicPlayer(
+                firstName: "Jordan",
+                lastName: "Reed",
+                age: 27,
+                position: PlayerPosition.Pitcher,
+                role: PlayerRole.StartingPitcher,
+                batHand: BatHand.Left,
+                throwHand: ThrowHand.Left,
+                attributes: new PhysicalAttributes(
+                    HeightInInches: 76,
+                    WeightInPounds: 220,
+                    SprintSpeed: 24.0,
+                    Acceleration: 5.5,
+                    BatSpeed: 65.0,
+                    ArmStrength: 95.0,
+                    ReactionTime: 0.20),
+                pitches: new List<Pitch>
+                {
+                    new Pitch("Fastball", 95, 2.5, 0.0),
+                    new Pitch("Curveball", 78, 1.5, -5.0),
+                    new Pitch("Slider", 85, 2.0, -2.5)
+                });
 
             var vm = new PlayerProfileViewModel(player);
             var view = new PlayerProfileView { DataContext = vm };

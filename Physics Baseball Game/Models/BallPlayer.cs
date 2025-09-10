@@ -18,10 +18,11 @@ namespace Physics_Baseball_Game.Models
         public BatHand BattingHand { get; set; }
         public ThrowHand ThrowingHand { get; set; }
         public PhysicalAttributes Attributes { get; set; }
+        public List<Pitch> Repertoire { get; set; } = new();
 
         protected BallPlayer(
             string firstName, string lastName, int age, PlayerPosition position, PlayerRole role, BatHand battingHand,
-            ThrowHand throwingHand, PhysicalAttributes attributes)
+            ThrowHand throwingHand, PhysicalAttributes attributes, List<Pitch> pitches)
         {
             Id = Guid.NewGuid();
             FirstName = firstName;
@@ -32,6 +33,7 @@ namespace Physics_Baseball_Game.Models
             BattingHand = battingHand;
             ThrowingHand = throwingHand;
             Attributes = attributes;
+            Repertoire = pitches;
         }
     }
 
@@ -80,4 +82,10 @@ namespace Physics_Baseball_Game.Models
         double ArmStrength,
         double ReactionTime
         );
+
+    internal readonly record struct Pitch(
+        string Name,
+        double VelocityInMph,
+        double SpinRateInRpm,
+        double SpinAxisInDegrees);
 }

@@ -12,8 +12,9 @@ namespace Physics_Baseball_Game.Models
             PlayerRole role,
             BatHand batHand,
             ThrowHand throwHand,
-            PhysicalAttributes attributes)
-            : base(firstName, lastName, age, position, role, batHand, throwHand, attributes)
+            PhysicalAttributes attributes,
+            List<Pitch> pitches)
+            : base(firstName, lastName, age, position, role, batHand, throwHand, attributes, pitches)
         {
         }
     }
