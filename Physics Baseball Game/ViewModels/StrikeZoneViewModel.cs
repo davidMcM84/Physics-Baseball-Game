@@ -12,13 +12,23 @@ namespace Physics_Baseball_Game.ViewModels
     {
         private BallPlayer _batter;
         private BallPlayer _pitcher;
+        private Pitch? _selectedPitch;
 
         public StrikeZoneViewModel(BallPlayer batter, BallPlayer pitcher)
         {
             _batter = batter ?? throw new ArgumentNullException(nameof(batter));
             _pitcher = pitcher ?? throw new ArgumentNullException(nameof(pitcher));
 
-            PitchCommand = new RelayCommand(Pitch);
+            if(_pitcher.Repertoire.Count > 0)
+            {
+                _selectedPitch = _pitcher.Repertoire[0];
+            }
+            else
+            {
+                _selectedPitch = new Pitch("Fastball", 95, 2000, 0);
+            }
+
+                PitchCommand = new RelayCommand(Pitch);
             NextBatterCommand = new RelayCommand(NextBatter);
         }
 
@@ -46,6 +56,12 @@ namespace Physics_Baseball_Game.ViewModels
             }
         }
 
+        public Pitch? SelectedPitch
+        {
+            get => _selectedPitch;
+            set => SetProperty(ref _selectedPitch, value);
+        }
+
         public string BatterName => $"{Batter.FirstName} {Batter.LastName}";
         public string PitcherName => $"{Pitcher.FirstName} {Pitcher.LastName}";
 
@@ -59,13 +75,24 @@ namespace Physics_Baseball_Game.ViewModels
         // Simple demo pitch generator (normalized coordinates -1..1)
         private readonly Random _rng = new();
 
-        private void Pitch()
+        private void Pitch(object? parameter)
         {
-            // Box-Muller normal sample around zone center (0,0)
-            double x = Clamp(Normal(0, 0.35), -1, 1);
-            double y = Clamp(Normal(0, 0.35), -1, 1);
+            Pitch pitch;
+            if (parameter is Pitch p)
+            {
+                pitch = p;
+                SelectedPitch = p;
+            }else if (SelectedPitch is Pitch sp)
+            {
+                pitch = sp;
+            }
+            else
+            {
+                return;
+            }
 
-            Pitches.Add(new PitchPoint(x, y, $"Pitch: ({x:0.00},{y:0.00})"));
+            var point = ComputePitchPoint(pitch);
+            Pitches.Add(point);
         }
 
         private void NextBatter()
@@ -85,6 +112,32 @@ namespace Physics_Baseball_Game.ViewModels
             double u2 = 1.0 - _rng.NextDouble();
             double z0 = Math.Sqrt(-2.0 * Math.Log(u1)) * Math.Cos(2.0 * Math.PI * u2);
             return mean + z0 * stddev;
+        }
+
+        // Basic trajectory model: break influenced by spin rate/axis and scaled by velocity (time in flight)
+        // Returns normalized location (x,y) in [-1..1] where inner square [-0.5..0.5] is the strike zone.
+        private PitchPoint ComputePitchPoint(Pitch pitch)
+        {
+            // Convert axis to radians; sign controls glove/arm side vs drop/rise
+            double axisRad = pitch.SpinAxisInDegrees * Math.PI / 180.0;
+
+            // Faster pitches have less time to break
+            double timeScale = 90.0 / Math.Max(30.0, pitch.VelocityInMph);
+
+            // Simple break model (toy): horizontal ~ sin(axis), vertical ~ cos(axis)
+            double hBreak = pitch.SpinRateInRpm * Math.Sin(axisRad) * 0.25 * timeScale;
+            double vBreak = -pitch.SpinRateInRpm * Math.Cos(axisRad) * 0.35 * timeScale;
+
+            // Command variability (smaller sigma for stronger arms)
+            double arm = Pitcher.Attributes.ArmStrength; // 0..100-ish
+            double sigma = 0.12 * Math.Clamp(1.0 - (arm - 80.0) / 80.0, 0.6, 1.3);
+
+            // Final location with noise, clamped to view range
+            double x = Clamp(hBreak + Normal(0, sigma), -1, 1);
+            double y = Clamp(vBreak + Normal(0, sigma), -1, 1);
+
+            string tooltip = $"{pitch.Name} {pitch.VelocityInMph:0} mph  ({x:0.00},{y:0.00})";
+            return new PitchPoint(x, y, tooltip);
         }
     }
 }

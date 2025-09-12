@@ -44,12 +44,20 @@
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
                                 <Grid>
-                                  <Grid.RowDefinitions>
-                                    <RowDefinition Height="*"/><RowDefinition Height="*"/><RowDefinition Height="*"/><RowDefinition Height="*"/><RowDefinition Height="*"/>
-                                  </Grid.RowDefinitions>
-                                  <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/>
-                                  </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="*"/>
+                                        <RowDefinition Height="*"/>
+                                        <RowDefinition Height="*"/>
+                                        <RowDefinition Height="*"/>
+                                        <RowDefinition Height="*"/>
+                                    </Grid.RowDefinitions>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
                                 </Grid>
                             </ItemsPanelTemplate>
                         </ItemsControl.ItemsPanel>
@@ -127,11 +135,16 @@
             </TextBox>
         </Border>
 
-        <!-- Buttons overlaid at top-right (independent of zone centering) -->
+        <!-- Pitch selection + buttons (top-right) -->
         <StackPanel HorizontalAlignment="Right" VerticalAlignment="Top">
+            <ComboBox Width="140" Margin="0,0,0,8"
+                      ItemsSource="{Binding Pitcher.Repertoire}"
+                      SelectedItem="{Binding SelectedPitch, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                      DisplayMemberPath="Name"/>
             <Button Content="Pitch"
                     Width="140" Height="40" Margin="0,0,0,8"
                     Command="{Binding ElementName=root, Path=PitchCommand}"
+                    CommandParameter="{Binding SelectedPitch}"
                     Click="PitchButton_Click"/>
             <Button Content="Next Batter"
                     Width="140" Height="40"
