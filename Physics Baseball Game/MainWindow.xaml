@@ -28,6 +28,7 @@
                         <TextBlock Text="A Physics-Based Batting Challenge" FontSize="18" Foreground="#CCFFFFFF" TextAlignment="Center" Margin="0,12,0,4" />
                         <StackPanel Margin="0,16,0,0">
                             <Button x:Name="StartButton" Content="Start Game" Height="54" FontSize="20" Click="StartGame_Click" IsDefault="True" Margin="0,0,0,12" />
+                            <Button Content="Strike Zone" Height="48" FontSize="18" Click="OpenStrikeZone_Click" Margin="0,0,0,12" />
                             <Button Content="Options" Height="48" FontSize="18" Click="Options_Click" Margin="0,0,0,12" />
                             <Button Content="Exit" Height="48" FontSize="18" Click="Exit_Click" />
                         </StackPanel>

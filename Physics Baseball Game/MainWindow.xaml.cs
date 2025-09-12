@@ -72,6 +72,60 @@ namespace Physics_Baseball_Game
             ShowView(view);
         }
 
+        private void OpenStrikeZone_Click(object sender, RoutedEventArgs e)
+        {
+
+            // Temporary: create a sample player. Replace with repository lookup later.
+            var player = new BasicPlayer(
+                firstName: "Alex",
+                lastName: "Carter",
+                age: 24,
+                position: PlayerPosition.CenterField,
+                role: PlayerRole.Batter,
+                batHand: BatHand.Right,
+                throwHand: ThrowHand.Right,
+                attributes: new PhysicalAttributes(
+                    HeightInInches: 74,
+                    WeightInPounds: 205,
+                    SprintSpeed: 28.4,
+                    Acceleration: 7.2,
+                    BatSpeed: 72.5,
+                    ArmStrength: 88.1,
+                    ReactionTime: 0.18),
+                pitches: new List<Pitch>());
+
+            var pitcher = new BasicPlayer(
+                firstName: "Jordan",
+                lastName: "Reed",
+                age: 27,
+                position: PlayerPosition.Pitcher,
+                role: PlayerRole.StartingPitcher,
+                batHand: BatHand.Left,
+                throwHand: ThrowHand.Left,
+                attributes: new PhysicalAttributes(
+                    HeightInInches: 76,
+                    WeightInPounds: 220,
+                    SprintSpeed: 24.0,
+                    Acceleration: 5.5,
+                    BatSpeed: 65.0,
+                    ArmStrength: 95.0,
+                    ReactionTime: 0.20),
+                pitches: new List<Pitch>
+                {
+                    new Pitch("Fastball", 95, 2.5, 0.0),
+                    new Pitch("Curveball", 78, 1.5, -5.0),
+                    new Pitch("Slider", 85, 2.0, -2.5)
+                });
+
+            var vm = new StrikeZoneViewModel(player, pitcher);
+            var view = new StrikeZoneView 
+            { 
+                DataContext = vm, 
+                Pitches = new System.Collections.ObjectModel.ObservableCollection<Views.Utilities.PitchPoint>() 
+            };
+            ShowView(view);
+        }
+
         private void ShowView(UserControl view)
         {
             StartScreenRoot.Visibility = Visibility.Collapsed;
