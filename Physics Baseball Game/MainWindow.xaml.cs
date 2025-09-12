@@ -120,8 +120,10 @@ namespace Physics_Baseball_Game
             var vm = new StrikeZoneViewModel(player, pitcher);
             var view = new StrikeZoneView 
             { 
-                DataContext = vm, 
-                Pitches = new System.Collections.ObjectModel.ObservableCollection<Views.Utilities.PitchPoint>() 
+                DataContext = vm,
+                Pitches = vm.Pitches,
+                PitchCommand = vm.PitchCommand,
+                NextBatterCommand = vm.NextBatterCommand
             };
             ShowView(view);
         }
