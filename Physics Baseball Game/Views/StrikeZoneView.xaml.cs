@@ -9,21 +9,64 @@ using Physics_Baseball_Game.Views.Utilities;
 
 namespace Physics_Baseball_Game.Views
 {
-    /// <summary>
-    /// Strike zone view with a 5x5 grid. Center 3x3 is the strike zone.
-    /// Plot coordinates are normalized to [-1, +1] on both axes.
-    /// X: -1 left edge of outer ring, +1 right edge. Y: -1 bottom, +1 top.
-    /// The strike zone occupies [-0.5, +0.5] on both axes.
-    /// </summary>
     public partial class StrikeZoneView : UserControl
     {
         public StrikeZoneView()
         {
             InitializeComponent();
-            if (Pitches is INotifyCollectionChanged incc)
-                incc.CollectionChanged += (_, __) => Redraw();
-            Loaded += (_, __) => Redraw();
+            Loaded += (_, __) =>
+            {
+                UpdateZoneSize();
+                Redraw();
+            };
             SizeChanged += (_, __) => Redraw();
+        }
+
+        // “Inch” dimensions for inner strike zone (center 3x3).
+        public static readonly DependencyProperty PlateWidthInchesProperty =
+            DependencyProperty.Register(nameof(PlateWidthInches), typeof(double), typeof(StrikeZoneView),
+                new PropertyMetadata(17.0, OnZoneDimChanged));
+
+        public static readonly DependencyProperty StrikeZoneHeightInchesProperty =
+            DependencyProperty.Register(nameof(StrikeZoneHeightInches), typeof(double), typeof(StrikeZoneView),
+                new PropertyMetadata(24.0, OnZoneDimChanged));
+
+        public double PlateWidthInches
+        {
+            get => (double)GetValue(PlateWidthInchesProperty);
+            set => SetValue(PlateWidthInchesProperty, value);
+        }
+
+        public double StrikeZoneHeightInches
+        {
+            get => (double)GetValue(StrikeZoneHeightInchesProperty);
+            set => SetValue(StrikeZoneHeightInchesProperty, value);
+        }
+
+        private static void OnZoneDimChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            var v = (StrikeZoneView)d;
+            v.UpdateZoneSize();
+            v.Redraw();
+        }
+
+        private void UpdateZoneSize()
+        {
+            if (ZoneRoot == null) return;
+
+            const double dipsPerInch = 96.0;
+
+            // Inner strike zone inches (defaults): 17" wide x 24" high
+            double innerWidthInches = PlateWidthInches;          // 17 by default
+            double innerHeightInches = StrikeZoneHeightInches;   // 24 by default
+
+            // Each grid cell is 1/3 of the inner zone size; total grid is 5 cells per axis
+            double totalWidthInches = innerWidthInches * (5.0 / 3.0);
+            double totalHeightInches = innerHeightInches * (5.0 / 3.0);
+
+            // Convert inches -> DIPs for layout; LayoutTransform scales DIPs to 2 px/inch
+            ZoneRoot.Width = totalWidthInches * dipsPerInch;
+            ZoneRoot.Height = totalHeightInches * dipsPerInch;
         }
 
         // Commands for buttons (bind from parent ViewModel)
@@ -45,7 +88,7 @@ namespace Physics_Baseball_Game.Views
             set => SetValue(NextBatterCommandProperty, value);
         }
 
-        // Routed events for consumers that prefer event handlers
+        // Routed events (unchanged)
         public static readonly RoutedEvent PitchRequestedEvent =
             EventManager.RegisterRoutedEvent(nameof(PitchRequested), RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(StrikeZoneView));
 
@@ -91,30 +134,16 @@ namespace Physics_Baseball_Game.Views
             view.Redraw();
         }
 
-        private void Pitches_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
-        {
-            Redraw();
-        }
+        private void Pitches_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e) => Redraw();
 
-        /// <summary>
-        /// Add a single pitch to the overlay (also adds to Pitches).
-        /// </summary>
-        public void AddPitch(PitchPoint pitch)
-        {
-            Pitches.Add(pitch);
-        }
+        public void AddPitch(PitchPoint pitch) => Pitches.Add(pitch);
 
-        /// <summary>
-        /// Returns 5x5 zone index for the given normalized coordinates.
-        /// row/col are 0..4 (row 0 is top, col 0 is left). Center 3x3 (rows 1..3, cols 1..3) is strike zone.
-        /// </summary>
         public (int row, int col) GetZoneIndex(double x, double y)
         {
-            // Clamp to [-1, 1]
+            // x,y normalized to [-1,1]. Inner zone is [-0.5,0.5].
             x = x < -1 ? -1 : (x > 1 ? 1 : x);
             y = y < -1 ? -1 : (y > 1 ? 1 : y);
 
-            // Map [-1..1] to 0..5, then take int 0..4
             int col = (int)((x + 1.0) / 2.0 * 5.0);
             int row = (int)((1.0 - (y + 1.0) / 2.0) * 5.0);
 
@@ -130,10 +159,14 @@ namespace Physics_Baseball_Game.Views
 
             Overlay.Children.Clear();
 
-            double size = 500; // Viewbox scales this uniformly
+            // Use actual zone size instead of a constant.
+            double width = ZoneRoot?.ActualWidth > 0 ? ZoneRoot.ActualWidth : 0;
+            double height = ZoneRoot?.ActualHeight > 0 ? ZoneRoot.ActualHeight : 0;
+            if (width <= 0 || height <= 0) return;
+
             foreach (var p in Pitches)
             {
-                var (left, top) = MapToPixels(p.X, p.Y, size);
+                var (left, top) = MapToPixels(p.X, p.Y, width, height);
                 var ellipse = new Ellipse
                 {
                     Width = p.Diameter,
@@ -143,7 +176,6 @@ namespace Physics_Baseball_Game.Views
                     StrokeThickness = p.StrokeThickness
                 };
 
-                // Center the ellipse on (left, top)
                 Canvas.SetLeft(ellipse, left - ellipse.Width / 2);
                 Canvas.SetTop(ellipse, top - ellipse.Height / 2);
                 Overlay.Children.Add(ellipse);
@@ -152,30 +184,12 @@ namespace Physics_Baseball_Game.Views
             }
         }
 
-        private static (double left, double top) MapToPixels(double x, double y, double size)
+        private static (double left, double top) MapToPixels(double x, double y, double width, double height)
         {
-            // Normalize: x,y in [-1..1]. Convert to 0..1
+            // Normalize: x,y in [-1..1]. Convert to 0..1 per axis.
             double ux = (x + 1.0) / 2.0;
             double uy = 1.0 - (y + 1.0) / 2.0; // invert y to top-down
-
-            return (ux * size, uy * size);
-        }
-
-        // Button handlers: execute bound commands if available, also raise routed events for subscribers
-        private void PitchButton_Click(object sender, RoutedEventArgs e)
-        {
-            if (PitchCommand?.CanExecute(null) == true)
-                PitchCommand.Execute(null);
-
-            RaiseEvent(new RoutedEventArgs(PitchRequestedEvent));
-        }
-
-        private void NextBatterButton_Click(object sender, RoutedEventArgs e)
-        {
-            if (NextBatterCommand?.CanExecute(null) == true)
-                NextBatterCommand.Execute(null);
-
-            RaiseEvent(new RoutedEventArgs(NextBatterRequestedEvent));
+            return (ux * width, uy * height);
         }
     }
 }
